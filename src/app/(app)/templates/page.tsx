@@ -216,7 +216,7 @@ function TemplateTable({ templates, isOwn }: { templates: TemplateRow[]; isOwn: 
 function RowActions({ template: t, isOwn }: { template: TemplateRow; isOwn: boolean }) {
   if (!isOwn) {
     return (
-      <form action={duplicateTemplate.bind(null, t.id, false)}>
+      <form action={duplicateTemplate.bind(null, t.id, false) as unknown as (fd: FormData) => void}>
         <button type="submit" className="text-xs text-primary hover:underline">
           Copiar para minha org
         </button>
@@ -231,12 +231,12 @@ function RowActions({ template: t, isOwn }: { template: TemplateRow; isOwn: bool
           <Link href={`/templates/${t.id}`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
             Editar
           </Link>
-          <form action={duplicateTemplate.bind(null, t.id, false)}>
+          <form action={duplicateTemplate.bind(null, t.id, false) as unknown as (fd: FormData) => void}>
             <button type="submit" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Duplicar
             </button>
           </form>
-          <form action={deleteTemplate.bind(null, t.id)}>
+          <form action={deleteTemplate.bind(null, t.id) as unknown as (fd: FormData) => void}>
             <button type="submit" className="text-xs text-destructive hover:text-destructive/80 transition-colors">
               Excluir
             </button>
@@ -248,17 +248,17 @@ function RowActions({ template: t, isOwn }: { template: TemplateRow; isOwn: bool
           <Link href={`/templates/${t.id}`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
             Visualizar
           </Link>
-          <form action={duplicateTemplate.bind(null, t.id, true)}>
+          <form action={duplicateTemplate.bind(null, t.id, true) as unknown as (fd: FormData) => void}>
             <button type="submit" className="text-xs text-primary hover:underline">
               Nova versão
             </button>
           </form>
-          <form action={duplicateTemplate.bind(null, t.id, false)}>
+          <form action={duplicateTemplate.bind(null, t.id, false) as unknown as (fd: FormData) => void}>
             <button type="submit" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Duplicar
             </button>
           </form>
-          <form action={archiveTemplate.bind(null, t.id)}>
+          <form action={archiveTemplate.bind(null, t.id) as unknown as (fd: FormData) => void}>
             <button type="submit" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Arquivar
             </button>
@@ -270,7 +270,7 @@ function RowActions({ template: t, isOwn }: { template: TemplateRow; isOwn: bool
           <Link href={`/templates/${t.id}`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
             Visualizar
           </Link>
-          <form action={duplicateTemplate.bind(null, t.id, false)}>
+          <form action={duplicateTemplate.bind(null, t.id, false) as unknown as (fd: FormData) => void}>
             <button type="submit" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
               Duplicar
             </button>

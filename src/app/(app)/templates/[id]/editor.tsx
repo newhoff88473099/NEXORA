@@ -451,14 +451,14 @@ export function TemplateEditor({
               </button>
             )}
             {initial.status === "published" && !initial.is_library && (
-              <form action={duplicateTemplate.bind(null, initial.id, true)}>
+              <form action={duplicateTemplate.bind(null, initial.id, true) as unknown as (fd: FormData) => void}>
                 <button type="submit" className="px-3 py-1.5 border border-border rounded text-sm hover:bg-muted transition-colors">
                   Criar nova versão
                 </button>
               </form>
             )}
             {initial.is_library && (
-              <form action={duplicateTemplate.bind(null, initial.id, false)}>
+              <form action={duplicateTemplate.bind(null, initial.id, false) as unknown as (fd: FormData) => void}>
                 <button type="submit" className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-sm font-medium hover:bg-primary/90 transition-colors">
                   Copiar para minha organização
                 </button>
