@@ -157,14 +157,14 @@ insert into public.template_items (section_id, question, response_type, weight, 
 
 
 -- ============================================================
--- TEMPLATE 4: ISO 9001:2015 — Seções §7 e §8
+-- TEMPLATE 4: ISO 9001:2015 — Seções 7 e 8
 -- ============================================================
 insert into public.templates (title, category, norm_ref, version, status, is_library)
-values ('ISO 9001:2015 — Seções §7 e §8', 'qualidade', 'ISO 9001:2015', 1, 'published', true)
+values ('ISO 9001:2015 — Seções 7 e 8', 'qualidade', 'ISO 9001:2015', 1, 'published', true)
 returning id into t_iso9;
 
--- §7.1 Recursos
-insert into public.template_sections (template_id, title, order_index) values (t_iso9, '§7.1 Recursos', 0) returning id into s;
+-- 7.1 Recursos
+insert into public.template_sections (template_id, title, order_index) values (t_iso9, '7.1 Recursos', 0) returning id into s;
 insert into public.template_items (section_id, question, response_type, weight, norm_clause, order_index) values
   (s, 'A organização determina e provê os recursos necessários para estabelecer e manter o SGQ?', 'conforme_nc_na', 7, 'ISO 9001:2015 §7.1.1', 0),
   (s, 'As pessoas necessárias para a operação e controle do SGQ estão identificadas e disponíveis?', 'conforme_nc_na', 7, 'ISO 9001:2015 §7.1.2', 1),
@@ -173,8 +173,8 @@ insert into public.template_items (section_id, question, response_type, weight, 
   (s, 'Os recursos de monitoramento e medição são adequados, identificados e rastreáveis?', 'conforme_nc_na', 8, 'ISO 9001:2015 §7.1.5', 4),
   (s, 'Existe processo para determinar e gerenciar o conhecimento organizacional necessário ao SGQ?', 'conforme_nc_na', 6, 'ISO 9001:2015 §7.1.6', 5);
 
--- §7.2-7.4 Competência e Comunicação
-insert into public.template_sections (template_id, title, order_index) values (t_iso9, '§7.2–§7.4 Competência e Comunicação', 1) returning id into s;
+-- 7.2-7.4 Competência e Comunicação
+insert into public.template_sections (template_id, title, order_index) values (t_iso9, '7.2–7.4 Competência e Comunicação', 1) returning id into s;
 insert into public.template_items (section_id, question, response_type, weight, norm_clause, order_index) values
   (s, 'As competências necessárias para funções que afetam o SGQ estão determinadas e documentadas?', 'conforme_nc_na', 8, 'ISO 9001:2015 §7.2', 0),
   (s, 'Os colaboradores possuem educação, treinamento e experiência adequados às suas funções?', 'conforme_nc_na', 8, 'ISO 9001:2015 §7.2', 1),
@@ -183,8 +183,8 @@ insert into public.template_items (section_id, question, response_type, weight, 
   (s, 'As comunicações internas e externas relevantes ao SGQ estão definidas (o quê, quando, com quem)?', 'conforme_nc_na', 6, 'ISO 9001:2015 §7.4', 4),
   (s, 'Existe canal estabelecido para comunicação com clientes sobre dúvidas e reclamações?', 'conforme_nc_na', 7, 'ISO 9001:2015 §7.4', 5);
 
--- §7.5 Informação Documentada
-insert into public.template_sections (template_id, title, order_index) values (t_iso9, '§7.5 Informação Documentada', 2) returning id into s;
+-- 7.5 Informação Documentada
+insert into public.template_sections (template_id, title, order_index) values (t_iso9, '7.5 Informação Documentada', 2) returning id into s;
 insert into public.template_items (section_id, question, response_type, weight, norm_clause, order_index) values
   (s, 'Os documentos obrigatórios pela ISO 9001:2015 estão criados, controlados e disponíveis?', 'conforme_nc_na', 8, 'ISO 9001:2015 §7.5.1', 0),
   (s, 'Existe controle de revisões, aprovações e versões para documentos do SGQ?', 'conforme_nc_na', 8, 'ISO 9001:2015 §7.5.2', 1),
@@ -192,8 +192,8 @@ insert into public.template_items (section_id, question, response_type, weight, 
   (s, 'Os prazos de retenção de registros estão definidos e sendo respeitados?', 'conforme_nc_na', 6, 'ISO 9001:2015 §7.5.3', 3),
   (s, 'Documentos externos (normas, requisitos de clientes) estão identificados e controlados?', 'conforme_nc_na', 6, 'ISO 9001:2015 §7.5.3', 4);
 
--- §8.1 Planejamento Operacional
-insert into public.template_sections (template_id, title, order_index) values (t_iso9, '§8.1 Planejamento e Controle Operacional', 3) returning id into s;
+-- 8.1 Planejamento Operacional
+insert into public.template_sections (template_id, title, order_index) values (t_iso9, '8.1 Planejamento e Controle Operacional', 3) returning id into s;
 insert into public.template_items (section_id, question, response_type, weight, norm_clause, order_index) values
   (s, 'Os processos necessários para atender aos requisitos de produto/serviço estão planejados e implementados?', 'conforme_nc_na', 8, 'ISO 9001:2015 §8.1', 0),
   (s, 'Existem critérios para o controle dos processos e aceitação de produtos/serviços documentados?', 'conforme_nc_na', 8, 'ISO 9001:2015 §8.1', 1),
@@ -201,8 +201,8 @@ insert into public.template_items (section_id, question, response_type, weight, 
   (s, 'As saídas planejadas são atingidas por meio do controle implementado nos processos?', 'conforme_nc_na', 7, 'ISO 9001:2015 §8.1', 3),
   (s, 'As mudanças não planejadas são analisadas criticamente e controladas para minimizar efeitos adversos?', 'conforme_nc_na', 7, 'ISO 9001:2015 §8.1', 4);
 
--- §8.4 Controle de Fornecedores
-insert into public.template_sections (template_id, title, order_index) values (t_iso9, '§8.4 Controle de Processos Externos', 4) returning id into s;
+-- 8.4 Controle de Fornecedores
+insert into public.template_sections (template_id, title, order_index) values (t_iso9, '8.4 Controle de Processos Externos', 4) returning id into s;
 insert into public.template_items (section_id, question, response_type, weight, norm_clause, order_index) values
   (s, 'Os fornecedores externos são avaliados, selecionados e monitorados com base em critérios definidos?', 'conforme_nc_na', 8, 'ISO 9001:2015 §8.4.1', 0),
   (s, 'Existe lista de fornecedores aprovados, atualizada e com resultado das avaliações?', 'conforme_nc_na', 7, 'ISO 9001:2015 §8.4.1', 1),
@@ -212,14 +212,14 @@ insert into public.template_items (section_id, question, response_type, weight, 
 
 
 -- ============================================================
--- TEMPLATE 5: ISO/IEC 17025:2017 — §6 Recursos
+-- TEMPLATE 5: ISO/IEC 17025:2017 — Seção 6 Recursos
 -- ============================================================
 insert into public.templates (title, category, norm_ref, version, status, is_library)
-values ('ISO/IEC 17025:2017 — §6 Recursos', 'laboratorio', 'ISO/IEC 17025:2017', 1, 'published', true)
+values ('ISO/IEC 17025:2017 — Seção 6 Recursos', 'laboratorio', 'ISO/IEC 17025:2017', 1, 'published', true)
 returning id into t_17025;
 
--- §6.2 Pessoal
-insert into public.template_sections (template_id, title, order_index) values (t_17025, '§6.2 Pessoal', 0) returning id into s;
+-- 6.2 Pessoal
+insert into public.template_sections (template_id, title, order_index) values (t_17025, '6.2 Pessoal', 0) returning id into s;
 insert into public.template_items (section_id, question, response_type, weight, norm_clause, order_index) values
   (s, 'As competências do pessoal que afeta os resultados de ensaio/calibração estão documentadas?', 'conforme_nc_na', 8, 'ISO/IEC 17025:2017 §6.2.2', 0),
   (s, 'O pessoal que realiza atividades específicas é autorizado formalmente (credenciamento interno)?', 'conforme_nc_na', 9, 'ISO/IEC 17025:2017 §6.2.4', 1),
@@ -228,8 +228,8 @@ insert into public.template_items (section_id, question, response_type, weight, 
   (s, 'Pessoal externo (estagiários, temporários) que afeta resultados é supervisionado adequadamente?', 'conforme_nc_na', 7, 'ISO/IEC 17025:2017 §6.2.3', 4),
   (s, 'O laboratório possui política de desenvolvimento e atualização de competências do pessoal?', 'conforme_nc_na', 5, 'ISO/IEC 17025:2017 §6.2.1', 5);
 
--- §6.3 Instalações
-insert into public.template_sections (template_id, title, order_index) values (t_17025, '§6.3 Instalações e Condições Ambientais', 1) returning id into s;
+-- 6.3 Instalações
+insert into public.template_sections (template_id, title, order_index) values (t_17025, '6.3 Instalações e Condições Ambientais', 1) returning id into s;
 insert into public.template_items (section_id, question, response_type, weight, norm_clause, order_index) values
   (s, 'As condições ambientais (temperatura, umidade, pressão) são monitoradas e registradas?', 'conforme_nc_na', 9, 'ISO/IEC 17025:2017 §6.3.3', 0),
   (s, 'Os limites aceitáveis para as condições ambientais estão definidos para cada tipo de ensaio?', 'conforme_nc_na', 8, 'ISO/IEC 17025:2017 §6.3.2', 1),
@@ -237,8 +237,8 @@ insert into public.template_items (section_id, question, response_type, weight, 
   (s, 'Há separação efetiva entre áreas com atividades incompatíveis (ex: laboratório de micro vs. químico)?', 'conforme_nc_na', 8, 'ISO/IEC 17025:2017 §6.3.4', 3),
   (s, 'As instalações de suporte (elétrica, água purificada) são adequadas e mantidas?', 'conforme_nc_na', 6, 'ISO/IEC 17025:2017 §6.3.1', 4);
 
--- §6.4 Equipamentos
-insert into public.template_sections (template_id, title, order_index) values (t_17025, '§6.4 Equipamentos', 2) returning id into s;
+-- 6.4 Equipamentos
+insert into public.template_sections (template_id, title, order_index) values (t_17025, '6.4 Equipamentos', 2) returning id into s;
 insert into public.template_items (section_id, question, response_type, weight, norm_clause, requires_photo_on_nc, order_index) values
   (s, 'Todos os equipamentos usados em ensaios estão identificados com número único e etiqueta de calibração?', 'conforme_nc_na', 9, 'ISO/IEC 17025:2017 §6.4.4', true, 0),
   (s, 'Os equipamentos estão dentro do prazo de calibração/verificação válido?', 'conforme_nc_na', 10, 'ISO/IEC 17025:2017 §6.4.6', true, 1),
@@ -248,16 +248,16 @@ insert into public.template_items (section_id, question, response_type, weight, 
   (s, 'Os registros de equipamentos (fabricante, série, calibração, histórico) estão completos?', 'conforme_nc_na', 7, 'ISO/IEC 17025:2017 §6.4.13', false, 5),
   (s, 'Há avaliação do impacto em resultados anteriores quando um equipamento é encontrado fora de especificação?', 'conforme_nc_na', 8, 'ISO/IEC 17025:2017 §6.4.11', false, 6);
 
--- §6.5 Rastreabilidade
-insert into public.template_sections (template_id, title, order_index) values (t_17025, '§6.5 Rastreabilidade de Medição', 3) returning id into s;
+-- 6.5 Rastreabilidade
+insert into public.template_sections (template_id, title, order_index) values (t_17025, '6.5 Rastreabilidade de Medição', 3) returning id into s;
 insert into public.template_items (section_id, question, response_type, weight, norm_clause, order_index) values
   (s, 'As calibrações são realizadas por laboratórios acreditados (INMETRO/CGCRE) ou com rastreabilidade ao SI?', 'conforme_nc_na', 10, 'ISO/IEC 17025:2017 §6.5.2', 0),
   (s, 'Os padrões de referência internos são calibrados e rastreáveis a padrões nacionais/internacionais?', 'conforme_nc_na', 9, 'ISO/IEC 17025:2017 §6.5.3', 1),
   (s, 'Os padrões de referência são utilizados exclusivamente para calibração, não para ensaios rotineiros?', 'conforme_nc_na', 8, 'ISO/IEC 17025:2017 §6.5.3', 2),
   (s, 'Existe avaliação da incerteza de medição para todos os tipos de ensaio/calibração realizados?', 'conforme_nc_na', 9, 'ISO/IEC 17025:2017 §7.6', 3);
 
--- §6.6 Recursos Externos
-insert into public.template_sections (template_id, title, order_index) values (t_17025, '§6.6 Recursos Externos', 4) returning id into s;
+-- 6.6 Recursos Externos
+insert into public.template_sections (template_id, title, order_index) values (t_17025, '6.6 Recursos Externos', 4) returning id into s;
 insert into public.template_items (section_id, question, response_type, weight, norm_clause, order_index) values
   (s, 'Os fornecedores externos de produtos e serviços críticos são avaliados e aprovados formalmente?', 'conforme_nc_na', 7, 'ISO/IEC 17025:2017 §6.6.1', 0),
   (s, 'Reagentes, materiais de referência e consumíveis são verificados no recebimento?', 'conforme_nc_na', 8, 'ISO/IEC 17025:2017 §6.6.2', 1),

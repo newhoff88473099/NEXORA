@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useTransition } from "react";
+import { useState, useEffect, useRef, useCallback, useTransition } from "react";
 import Link from "next/link";
 import {
   DndContext,
@@ -27,6 +27,7 @@ import {
   Trash2,
   CheckCircle,
   ArrowLeft,
+  Sparkles,
 } from "lucide-react";
 import {
   updateTemplateMetadata,
@@ -40,6 +41,7 @@ import {
   updateItem,
   deleteItem,
   reorderItems,
+  importChecklist,
 } from "../actions";
 
 // ── Tipos ────────────────────────────────────────────────────
@@ -131,7 +133,7 @@ export function TemplateEditor({
   const [isPending, startTransition] = useTransition();
 
   const sectionsRef = useRef(sections);
-  sectionsRef.current = sections;
+  useEffect(() => { sectionsRef.current = sections; });
 
   // Timers de autosave por entidade
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -474,6 +476,21 @@ export function TemplateEditor({
         </div>
       </div>
 
+      {/* Gerar com IA */}
+      {canEdit && (
+        <GeneratePanel
+          templateId={initial.id}
+          onSectionsAdded={(newSections) => {
+            setSections((prev) => [...prev, ...newSections]);
+            setExpandedSections((prev) => {
+              const next = new Set(prev);
+              newSections.forEach((s) => next.add(s.id));
+              return next;
+            });
+          }}
+        />
+      )}
+
       {/* Editor de seções */}
       <DndContext
         sensors={sensors}
@@ -494,7 +511,7 @@ export function TemplateEditor({
                 onToggle={() =>
                   setExpandedSections((prev) => {
                     const next = new Set(prev);
-                    next.has(section.id) ? next.delete(section.id) : next.add(section.id);
+                    if (next.has(section.id)) { next.delete(section.id); } else { next.add(section.id); }
                     return next;
                   })
                 }
@@ -519,6 +536,140 @@ export function TemplateEditor({
           <Plus className="h-4 w-4 mx-auto" />
           <span>Adicionar seção</span>
         </button>
+      )}
+    </div>
+  );
+}
+
+// ── GeneratePanel ─────────────────────────────────────────────
+
+type AiSection = {
+  title: string;
+  items: Array<{
+    question: string;
+    response_type: string;
+    weight: number;
+    norm_clause?: string;
+    requires_photo_on_nc?: boolean;
+    requires_action_on_nc?: boolean;
+  }>;
+};
+
+function GeneratePanel({
+  templateId,
+  onSectionsAdded,
+}: {
+  templateId: string;
+  onSectionsAdded: (sections: SectionData[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState<AiSection[] | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleGenerate() {
+    if (!input.trim()) return;
+    setLoading(true);
+    setPreview(null);
+    setError("");
+    try {
+      const res = await fetch("/api/ai-assist", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ feature: "generate_checklist", payload: { input: input.trim() } }),
+      });
+      const data = await res.json() as { text?: string; error?: string };
+      if (data.error) { setError(data.error); return; }
+      const parsed = JSON.parse(data.text ?? "{}") as { sections?: AiSection[] };
+      if (!Array.isArray(parsed.sections) || parsed.sections.length === 0) {
+        setError("Não foi possível gerar um checklist válido. Tente descrever melhor o processo ou norma.");
+        return;
+      }
+      setPreview(parsed.sections);
+    } catch {
+      setError("Erro ao processar resposta. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleImport() {
+    if (!preview) return;
+    setImporting(true);
+    const result = await importChecklist(templateId, preview);
+    if (result.sections) {
+      onSectionsAdded(result.sections as SectionData[]);
+      setPreview(null);
+      setInput("");
+      setOpen(false);
+    }
+    setImporting(false);
+  }
+
+  return (
+    <div className="rounded border border-border bg-card">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <Sparkles className="h-4 w-4" />
+        <span className="font-medium">Gerar seções com IA</span>
+        {open ? <ChevronDown className="h-4 w-4 ml-auto" /> : <ChevronRight className="h-4 w-4 ml-auto" />}
+      </button>
+
+      {open && (
+        <div className="border-t border-border px-4 pb-4 pt-3 space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Cole um trecho de norma ou descreva o processo a auditar. O rascunho gerado pode ser editado antes de usar.
+          </p>
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            rows={4}
+            placeholder="Ex: Requisitos da NR-12 para proteção de máquinas, seções 12.38 a 12.42…"
+            className="w-full px-3 py-2 rounded border border-border bg-background text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          {error && <p className="text-xs text-[var(--nc)]">{error}</p>}
+
+          <div className="flex gap-2">
+            <button
+              onClick={handleGenerate}
+              disabled={loading || !input.trim()}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              {loading ? "Gerando…" : "Gerar rascunho"}
+            </button>
+            {preview && (
+              <button
+                onClick={handleImport}
+                disabled={importing}
+                className="px-3 py-1.5 border border-border rounded text-sm hover:bg-muted transition-colors disabled:opacity-50"
+              >
+                {importing ? "Adicionando…" : `Adicionar ${preview.length} seções ao template`}
+              </button>
+            )}
+          </div>
+
+          {preview && (
+            <div className="space-y-2 pt-1">
+              <p className="text-xs font-medium text-muted-foreground">
+                Rascunho gerado automaticamente — revise antes de adicionar.
+              </p>
+              {preview.map((sec, i) => (
+                <div key={i} className="rounded border border-border/60 bg-muted/20 px-3 py-2">
+                  <p className="text-xs font-medium text-foreground">{sec.title}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {sec.items.length} {sec.items.length === 1 ? "item" : "itens"}
+                    {sec.items.length > 0 && `: ${sec.items[0].question.slice(0, 60)}${sec.items[0].question.length > 60 ? "…" : ""}`}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -693,7 +844,7 @@ function SortableItem({
         <div className="flex-1 min-w-0">
           {canEdit ? (
             <input
-              value={item.question}
+              value={item.question ?? ""}
               onChange={(e) => onChange({ question: e.target.value })}
               className="w-full text-sm bg-transparent border-none outline-none text-foreground"
               placeholder="Texto da pergunta"
@@ -770,7 +921,7 @@ function SortableItem({
               <span className="text-xs text-muted-foreground">Cláusula da norma</span>
               <input
                 readOnly={!canEdit}
-                value={item.norm_clause}
+                value={item.norm_clause ?? ""}
                 onChange={(e) => onChange({ norm_clause: e.target.value })}
                 placeholder="Ex: NR-12.38"
                 className="w-full text-xs px-2 py-1 rounded border border-border bg-background font-mono focus:outline-none focus:ring-1 focus:ring-primary read-only:bg-muted/30"
@@ -780,7 +931,7 @@ function SortableItem({
               <span className="text-xs text-muted-foreground">Texto de ajuda</span>
               <input
                 readOnly={!canEdit}
-                value={item.help_text}
+                value={item.help_text ?? ""}
                 onChange={(e) => onChange({ help_text: e.target.value })}
                 placeholder="Instrução ao auditor"
                 className="w-full text-xs px-2 py-1 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary read-only:bg-muted/30"
@@ -794,7 +945,7 @@ function SortableItem({
               <label className="space-y-1">
                 <span className="text-xs text-muted-foreground">Unidade</span>
                 <input
-                  value={item.unit}
+                  value={item.unit ?? ""}
                   onChange={(e) => onChange({ unit: e.target.value })}
                   placeholder="Ex: mm, kg, ºC"
                   className="w-24 text-xs px-2 py-1 rounded border border-border bg-background font-mono focus:outline-none focus:ring-1 focus:ring-primary"

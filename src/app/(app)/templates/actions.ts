@@ -324,3 +324,100 @@ export async function reorderItems(
   await Promise.all(updates);
   return {};
 }
+
+// ── Importar checklist gerado por IA ─────────────────────────
+
+type ImportItem = {
+  question: string;
+  response_type: string;
+  weight: number;
+  norm_clause?: string;
+  requires_photo_on_nc?: boolean;
+  requires_action_on_nc?: boolean;
+};
+
+type ImportSection = {
+  title: string;
+  items: ImportItem[];
+};
+
+type ImportedSection = {
+  id: string;
+  title: string;
+  order_index: number;
+  template_items: Array<{
+    id: string; question: string; response_type: string; weight: number;
+    norm_clause: string; help_text: string; requires_photo_on_nc: boolean;
+    requires_action_on_nc: boolean; unit: string; min_value: null; max_value: null;
+    options: string[]; order_index: number;
+  }>;
+};
+
+export async function importChecklist(
+  templateId: string,
+  sections: ImportSection[]
+): Promise<{ sections?: ImportedSection[]; error?: string }> {
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("template_sections")
+    .select("order_index")
+    .eq("template_id", templateId)
+    .order("order_index", { ascending: false })
+    .limit(1)
+    .single();
+
+  const baseIndex = (existing?.order_index ?? -1) + 1;
+  const created: ImportedSection[] = [];
+
+  for (let i = 0; i < sections.length; i++) {
+    const sec = sections[i];
+    const { data: newSec, error: secErr } = await supabase
+      .from("template_sections")
+      .insert({ template_id: templateId, title: sec.title, order_index: baseIndex + i })
+      .select("id")
+      .single();
+
+    if (secErr || !newSec) continue;
+
+    const itemRows = sec.items.map((item, j) => ({
+      section_id: newSec.id,
+      question: item.question,
+      response_type: item.response_type || "conforme_nc_na",
+      weight: item.weight || 5,
+      norm_clause: item.norm_clause || null,
+      requires_photo_on_nc: item.requires_photo_on_nc ?? false,
+      requires_action_on_nc: item.requires_action_on_nc ?? false,
+      order_index: j,
+    }));
+
+    const { data: newItems } = await supabase
+      .from("template_items")
+      .insert(itemRows)
+      .select("id, question, response_type, weight, norm_clause, requires_photo_on_nc, requires_action_on_nc, order_index");
+
+    created.push({
+      id: newSec.id,
+      title: sec.title,
+      order_index: baseIndex + i,
+      template_items: (newItems ?? []).map((it) => ({
+        id: it.id,
+        question: it.question,
+        response_type: it.response_type,
+        weight: it.weight,
+        norm_clause: it.norm_clause ?? "",
+        help_text: "",
+        requires_photo_on_nc: it.requires_photo_on_nc,
+        requires_action_on_nc: it.requires_action_on_nc,
+        unit: "",
+        min_value: null,
+        max_value: null,
+        options: [],
+        order_index: it.order_index,
+      })),
+    });
+  }
+
+  revalidatePath(`/templates/${templateId}`);
+  return { sections: created };
+}

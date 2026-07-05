@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useTransition, useCallback, useRef } from "react";
+import { useState, useEffect, useTransition, useRef } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronDown, ChevronRight, MessageSquare, CheckCircle } from "lucide-react";
+import { ArrowLeft, ChevronRight, MessageSquare, CheckCircle } from "lucide-react";
 import { AnswerButtons } from "@/components/audit/answer-buttons";
 import { NcModal } from "@/components/audit/nc-modal";
 import { PhotoUploader } from "@/components/audit/photo-uploader";
@@ -273,7 +273,7 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
   const allItems = sections.flatMap((s) => s.template_items);
   const [currentSection, setCurrentSection] = useState(0);
   const [isFinalizing, setIsFinalizing] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   // Respostas
   const [answers, setAnswers] = useState<Record<string, AnswerState>>(() =>
@@ -322,29 +322,26 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
 
   // ── Responder item ───────────────────────────────────────
 
-  const handleAnswer = useCallback(
-    (item: ItemData, response: string) => {
-      setAnswers((prev) => ({
-        ...prev,
-        [item.id]: { ...prev[item.id], response, note: prev[item.id]?.note ?? "", photos: prev[item.id]?.photos ?? [] },
-      }));
+  function handleAnswer(item: ItemData, response: string) {
+    setAnswers((prev) => ({
+      ...prev,
+      [item.id]: { ...prev[item.id], response, note: prev[item.id]?.note ?? "", photos: prev[item.id]?.photos ?? [] },
+    }));
 
-      startTransition(() => {
-        void (async () => {
-          const result = await saveAnswer(audit.id, item.id, { response });
-          if (result.id) {
-            setAnswers((prev) => ({ ...prev, [item.id]: { ...prev[item.id], id: result.id } }));
-          }
-        })();
-      });
+    startTransition(() => {
+      void (async () => {
+        const result = await saveAnswer(audit.id, item.id, { response });
+        if (result.id) {
+          setAnswers((prev) => ({ ...prev, [item.id]: { ...prev[item.id], id: result.id } }));
+        }
+      })();
+    });
 
-      if (response === "nc") {
-        pendingNcItem.current = item;
-        setNcModal(item);
-      }
-    },
-    [audit.id]
-  );
+    if (response === "nc") {
+      pendingNcItem.current = item;
+      setNcModal(item);
+    }
+  }
 
   // ── Atualizar nota ────────────────────────────────────────
 
@@ -621,7 +618,7 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
       {/* Modal de NC */}
       {ncModal && (
         <NcModal
-          item={{ id: ncModal.id, question: ncModal.question, norm_clause: ncModal.norm_clause, requires_action_on_nc: ncModal.requires_action_on_nc }}
+          item={{ id: ncModal.id, question: ncModal.question, norm_clause: ncModal.norm_clause, requires_action_on_nc: ncModal.requires_action_on_nc, note: answers[ncModal.id]?.note }}
           onConfirm={(data) => handleNcConfirm(ncModal, data)}
           onCancel={() => {
             setNcModal(null);

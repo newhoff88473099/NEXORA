@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { ArrowLeft, CheckCircle, Clock } from "lucide-react";
+import { ArrowLeft, CheckCircle, FileDown } from "lucide-react";
 
 function scoreColor(score: number) {
   if (score >= 80) return "text-[var(--ok)]";
@@ -57,6 +57,11 @@ export default async function AuditoriaDetailPage({
     .eq("audit_id", id)
     .order("created_at");
 
+  const { data: actions } = await supabase
+    .from("actions")
+    .select("id, finding_id, type, description, status, due_date")
+    .in("finding_id", (findings ?? []).map((f) => f.id));
+
   const tpl = (Array.isArray(audit.templates) ? audit.templates[0] : audit.templates) as { title: string; category: string } | null;
   const plant = (Array.isArray(audit.plants) ? audit.plants[0] : audit.plants) as { name: string } | null;
 
@@ -90,9 +95,18 @@ export default async function AuditoriaDetailPage({
               <span>· {new Date(audit.finished_at).toLocaleDateString("pt-BR")}</span>
             )}
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-[var(--ok)]">
-            <CheckCircle className="h-3.5 w-3.5" />
-            <span>Concluída</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-[var(--ok)]">
+              <CheckCircle className="h-3.5 w-3.5" />
+              <span>Concluída</span>
+            </div>
+            <a
+              href={`/api/auditorias/${id}/pdf`}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <FileDown className="h-3.5 w-3.5" />
+              Baixar PDF
+            </a>
           </div>
         </div>
 
@@ -133,20 +147,37 @@ export default async function AuditoriaDetailPage({
                   <th className="text-left px-4 py-2 font-medium text-muted-foreground font-mono text-xs">Código</th>
                   <th className="text-left px-3 py-2 font-medium text-muted-foreground">Severidade</th>
                   <th className="text-left px-3 py-2 font-medium text-muted-foreground">Descrição</th>
+                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">Ação</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {(findings ?? []).map((f) => (
-                  <tr key={f.id} className="hover:bg-muted/30">
-                    <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{f.code}</td>
-                    <td className="px-3 py-2.5">
-                      <span className={`text-xs px-2 py-0.5 rounded border ${SEVERITY_COLOR[f.severity]}`}>
-                        {SEVERITY_LABEL[f.severity]}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 text-muted-foreground">{f.description}</td>
-                  </tr>
-                ))}
+                {(findings ?? []).map((f) => {
+                  const action = (actions ?? []).find((a) => a.finding_id === f.id);
+                  const actionStatus: Record<string, string> = {
+                    a_fazer: "A fazer", em_andamento: "Em andamento",
+                    concluida: "Concluída", verificada: "Verificada",
+                  };
+                  return (
+                    <tr key={f.id} className="hover:bg-muted/30">
+                      <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{f.code}</td>
+                      <td className="px-3 py-2.5">
+                        <span className={`text-xs px-2 py-0.5 rounded border ${SEVERITY_COLOR[f.severity]}`}>
+                          {SEVERITY_LABEL[f.severity]}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 text-muted-foreground">{f.description}</td>
+                      <td className="px-3 py-2.5">
+                        {action ? (
+                          <a href={`/acoes/${action.id}`} className="text-xs text-primary hover:underline">
+                            {actionStatus[action.status] ?? action.status}
+                          </a>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

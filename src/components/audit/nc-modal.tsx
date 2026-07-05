@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 
 type ItemData = {
   id: string;
   question: string;
   norm_clause: string;
   requires_action_on_nc: boolean;
+  note?: string;
 };
 
 type FindingData = {
@@ -44,6 +45,36 @@ export function NcModal({ item, onConfirm, onCancel }: Props) {
   const [actionDesc, setActionDesc] = useState("");
   const [actionType, setActionType] = useState("corretiva");
   const [actionDue, setActionDue] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiUsed, setAiUsed] = useState(false);
+
+  const [aiError, setAiError] = useState("");
+
+  async function handleAiDescription() {
+    setAiLoading(true);
+    setAiError("");
+    try {
+      const res = await fetch("/api/ai-assist", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          feature: "find_description",
+          payload: { question: item.question, norm_clause: item.norm_clause, note: item.note },
+        }),
+      });
+      const data = await res.json() as { text?: string; error?: string; detail?: string };
+      if (data.text) {
+        setDescription(data.text);
+        setAiUsed(true);
+      } else {
+        setAiError(data.detail || data.error || "Erro desconhecido");
+      }
+    } catch (e) {
+      setAiError(String(e));
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   function handleSubmit() {
     if (!description.trim()) return;
@@ -96,16 +127,36 @@ export function NcModal({ item, onConfirm, onCancel }: Props) {
 
           {/* Descrição */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">
-              Descrição <span className="text-destructive">*</span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-foreground">
+                Descrição <span className="text-destructive">*</span>
+              </label>
+              <button
+                type="button"
+                onClick={handleAiDescription}
+                disabled={aiLoading}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                title="Redigir descrição com base na nota do auditor"
+              >
+                <Sparkles className="h-3 w-3" />
+                {aiLoading ? "Redigindo…" : "Redigir descrição"}
+              </button>
+            </div>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => { setDescription(e.target.value); setAiUsed(false); }}
               placeholder="Descreva a não conformidade observada…"
               rows={3}
               className="w-full px-3 py-2 rounded border border-border bg-background text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary"
             />
+            {aiUsed && (
+              <p className="text-[10px] text-muted-foreground">
+                Rascunho gerado automaticamente — revise antes de salvar.
+              </p>
+            )}
+            {aiError && (
+              <p className="text-[10px] text-[var(--nc)] break-all">{aiError}</p>
+            )}
           </div>
 
           {/* Cláusula */}
