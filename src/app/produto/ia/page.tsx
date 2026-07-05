@@ -42,7 +42,7 @@ export default function ProdutoIaPage() {
               priority
             />
           </Link>
-          <Button render={<Link href="/login" />} size="sm" variant="outline">
+          <Button render={<Link href="/login" />} nativeButton={false} size="sm" variant="outline">
             Entrar
           </Button>
         </div>
@@ -61,7 +61,7 @@ export default function ProdutoIaPage() {
             raiz — você continua no controle, a IA elimina a página em branco.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button render={<Link href="/login" />} size="lg">
+            <Button render={<Link href="/login" />} nativeButton={false} size="lg">
               Comece seu teste grátis de 15 dias
             </Button>
             <p className="text-xs text-muted-foreground">Sem cartão de crédito</p>
@@ -95,7 +95,7 @@ export default function ProdutoIaPage() {
             Veja a IA em ação no seu processo de auditoria
           </h2>
           <div className="mt-6">
-            <Button render={<Link href="/login" />} size="lg">
+            <Button render={<Link href="/login" />} nativeButton={false} size="lg">
               Comece seu teste grátis de 15 dias
             </Button>
           </div>
