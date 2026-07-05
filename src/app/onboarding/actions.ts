@@ -59,6 +59,15 @@ export async function createOrganization(
     return { errors: { _form: ["Organização criada mas falha ao associar usuário."] } };
   }
 
+  const trialEndsAt = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+
+  await admin.from("subscriptions").insert({
+    org_id: org.id,
+    status: "trialing",
+    plan: "trial",
+    trial_ends_at: trialEndsAt.toISOString(),
+  });
+
   revalidatePath("/dashboard");
   redirect("/dashboard");
 }
