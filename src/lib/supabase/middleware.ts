@@ -64,6 +64,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/dev-login") ||
     pathname.startsWith("/api/stripe/webhook") ||
+    pathname.startsWith("/produto/") ||
     pathname === "/";
 
   if (!user && !isPublicPath) {
