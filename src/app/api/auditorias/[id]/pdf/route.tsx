@@ -20,7 +20,7 @@ export async function GET(
   const { data: audit } = await supabase
     .from("audits")
     .select(`
-      id, status, score, finished_at, auditee_name, observations, auditee_signature_url,
+      id, status, score, finished_at, auditee_name, observations, auditee_signature_url, template_id,
       templates (title),
       plants (name)
     `)
@@ -33,9 +33,57 @@ export async function GET(
 
   const { data: findings } = await supabase
     .from("findings")
-    .select("code, severity, description")
+    .select("code, severity, description, answer_id")
     .eq("audit_id", id)
     .order("created_at");
+
+  const { data: template } = await supabase
+    .from("templates")
+    .select(`
+      template_sections (
+        id, title, order_index,
+        template_items (
+          id, question, response_type, norm_clause, unit, order_index
+        )
+      )
+    `)
+    .eq("id", audit.template_id)
+    .single();
+
+  const { data: answers } = await supabase
+    .from("audit_answers")
+    .select("id, template_item_id, response, note, photos")
+    .eq("audit_id", id);
+
+  const answersByItem = new Map((answers ?? []).map((a) => [a.template_item_id, a]));
+  const findingsByAnswer = new Map(
+    (findings ?? []).filter((f) => f.answer_id).map((f) => [f.answer_id as string, f])
+  );
+
+  const sections = (template?.template_sections ?? [])
+    .sort((a, b) => a.order_index - b.order_index)
+    .map((section) => ({
+      id: section.id,
+      title: section.title,
+      items: [...(section.template_items ?? [])]
+        .sort((a, b) => a.order_index - b.order_index)
+        .map((item) => {
+          const ans = answersByItem.get(item.id);
+          const photos = Array.isArray(ans?.photos) ? (ans.photos as unknown[]) : [];
+          const finding = ans?.id ? findingsByAnswer.get(ans.id) : undefined;
+          return {
+            id: item.id,
+            question: item.question,
+            norm_clause: item.norm_clause,
+            response_type: item.response_type,
+            response: ans?.response ?? null,
+            note: ans?.note ?? null,
+            unit: item.unit,
+            photos_count: photos.length,
+            finding: finding ? { code: finding.code ?? "", severity: finding.severity } : null,
+          };
+        }),
+    }));
 
   const { data: membership } = await supabase
     .from("memberships")
@@ -67,6 +115,7 @@ export async function GET(
       severity: f.severity,
       description: f.description,
     })),
+    sections,
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

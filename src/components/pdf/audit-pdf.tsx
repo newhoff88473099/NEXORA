@@ -14,6 +14,21 @@ export type AuditPDFData = {
     auditee_signature_url: string | null;
   };
   findings: Array<{ code: string; severity: string; description: string | null }>;
+  sections: Array<{
+    id: string;
+    title: string;
+    items: Array<{
+      id: string;
+      question: string;
+      norm_clause: string | null;
+      response_type: string;
+      response: string | null;
+      note: string | null;
+      unit: string | null;
+      photos_count: number;
+      finding: { code: string; severity: string } | null;
+    }>;
+  }>;
 };
 
 const ACCENT = "#1E6B4F";
@@ -39,6 +54,50 @@ function scoreColor(s: number) {
   return NC_RED;
 }
 
+const RESP_LABEL: Record<string, string> = {
+  conforme: "Conforme",
+  nc: "Não Conforme",
+  na: "N/A",
+};
+const RESP_COLOR: Record<string, string> = {
+  conforme: OK,
+  nc: NC_RED,
+  na: GRAY,
+};
+
+function answerText(item: AuditPDFData["sections"][number]["items"][number]): { text: string; color: string } {
+  const { response_type, response, unit, photos_count } = item;
+
+  if (response_type === "conforme_nc_na") {
+    if (!response) return { text: "Não respondido", color: MUTED };
+    return { text: RESP_LABEL[response] ?? response, color: RESP_COLOR[response] ?? INK };
+  }
+  if (response_type === "escala") {
+    return response ? { text: `${response} / 5`, color: INK } : { text: "Não respondido", color: MUTED };
+  }
+  if (response_type === "numero") {
+    return response ? { text: `${response}${unit ? " " + unit : ""}`, color: INK } : { text: "Não respondido", color: MUTED };
+  }
+  if (response_type === "multipla") {
+    if (!response) return { text: "Não respondido", color: MUTED };
+    try {
+      const arr = JSON.parse(response) as string[];
+      return { text: arr.length ? arr.join(", ") : "Nenhuma opção selecionada", color: INK };
+    } catch {
+      return { text: response, color: INK };
+    }
+  }
+  if (response_type === "foto") {
+    return photos_count > 0
+      ? { text: `${photos_count} foto${photos_count !== 1 ? "s" : ""} anexada${photos_count !== 1 ? "s" : ""}`, color: INK }
+      : { text: "Sem fotos", color: MUTED };
+  }
+  if (response_type === "assinatura") {
+    return response ? { text: "Assinado", color: OK } : { text: "Não assinado", color: MUTED };
+  }
+  return response ? { text: response, color: INK } : { text: "Não respondido", color: MUTED };
+}
+
 const s = StyleSheet.create({
   page:         { fontFamily: "Helvetica", paddingHorizontal: 48, paddingTop: 36, paddingBottom: 36, color: INK },
   stripe:       { position: "absolute", top: 0, left: 0, right: 0, height: 5, backgroundColor: ACCENT },
@@ -57,7 +116,7 @@ const s = StyleSheet.create({
   pageNum:      { fontSize: 7, color: MUTED },
 });
 
-export function AuditPDF({ audit, findings }: AuditPDFData) {
+export function AuditPDF({ audit, findings, sections }: AuditPDFData) {
   const hash = createHash("sha256")
     .update(`${audit.id}:${audit.finished_at ?? ""}:${findings.length}`)
     .digest("hex")
@@ -122,6 +181,63 @@ export function AuditPDF({ audit, findings }: AuditPDFData) {
           </View>
         )}
 
+        {pageFooter}
+      </Page>
+
+      {/* ── Checklist completo ───────────────────────── */}
+      <Page size="A4" style={s.page} wrap>
+        <View style={s.stripe} fixed />
+        <Text style={s.wordmark}>NEXORA</Text>
+        <Text style={s.secTitle}>CHECKLIST COMPLETO</Text>
+
+        {sections.map((section) => (
+          <View key={section.id}>
+            <Text
+              style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: ACCENT, marginTop: 10, marginBottom: 4 }}
+            >
+              {section.title}
+            </Text>
+
+            {section.items.map((item) => {
+              const { text, color } = answerText(item);
+              return (
+                <View
+                  key={item.id}
+                  style={{ borderBottom: "0.5pt solid " + BORDER, paddingVertical: 5 }}
+                  wrap={false}
+                >
+                  <Text style={{ fontSize: 9.5, color: INK }}>{item.question}</Text>
+                  {item.norm_clause && (
+                    <Text style={{ fontSize: 7.5, color: MUTED }}>{item.norm_clause}</Text>
+                  )}
+                  <Text style={{ fontSize: 9, color, fontFamily: "Helvetica-Bold", marginTop: 2 }}>
+                    {text}
+                  </Text>
+                  {item.note && (
+                    <Text style={{ fontSize: 8, color: MUTED, marginTop: 1 }}>Nota: {item.note}</Text>
+                  )}
+                  {item.finding && (
+                    <Text
+                      style={{
+                        fontSize: 8,
+                        color: SEV_COLOR[item.finding.severity] ?? MUTED,
+                        marginTop: 1,
+                      }}
+                    >
+                      {item.finding.code} · {SEV_LABEL[item.finding.severity] ?? item.finding.severity}
+                    </Text>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        ))}
+
+        <Text
+          style={{ ...s.pageNum, position: "absolute", bottom: 20, left: "50%" }}
+          render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
+          fixed
+        />
         {pageFooter}
       </Page>
 
