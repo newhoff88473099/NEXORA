@@ -59,6 +59,7 @@
   --ink-muted:     #5C625E;
   --accent-color:  #1E6B4F;
   --accent-hover:  #17553F;
+  --accent-bright: #2D7A5F; /* hover/detail sobre fundo escuro (seções machine) */
 
   /* Semânticas de conformidade */
   --ok:            #1E6B4F;
@@ -146,5 +147,13 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-up {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }
