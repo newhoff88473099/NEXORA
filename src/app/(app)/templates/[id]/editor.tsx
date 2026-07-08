@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useTransition } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   DndContext,
   closestCenter,
@@ -143,20 +144,26 @@ export function TemplateEditor({
     setLastSaved(new Date());
   }, []);
 
+  const markSaveError = useCallback((message?: string) => {
+    setSaveStatus("error");
+    toast.error(message || "Erro ao salvar alterações.");
+  }, []);
+
   const scheduleTemplateSave = useCallback(
     (newTitle: string, newCategory: string, newNormRef: string) => {
       clearTimeout(saveTimers.current["template"]);
       setSaveStatus("saving");
       saveTimers.current["template"] = setTimeout(async () => {
-        await updateTemplateMetadata(initial.id, {
+        const result = await updateTemplateMetadata(initial.id, {
           title: newTitle,
           category: newCategory,
           norm_ref: newNormRef || null,
         });
-        markSaved();
+        if (result.error) markSaveError(result.error);
+        else markSaved();
       }, 1200);
     },
-    [initial.id, markSaved]
+    [initial.id, markSaved, markSaveError]
   );
 
   const scheduleSectionSave = useCallback(
@@ -164,11 +171,12 @@ export function TemplateEditor({
       clearTimeout(saveTimers.current[`section-${id}`]);
       setSaveStatus("saving");
       saveTimers.current[`section-${id}`] = setTimeout(async () => {
-        await updateSection(id, newTitle);
-        markSaved();
+        const result = await updateSection(id, newTitle);
+        if (result.error) markSaveError(result.error);
+        else markSaved();
       }, 1200);
     },
-    [markSaved]
+    [markSaved, markSaveError]
   );
 
   const scheduleItemSave = useCallback(
@@ -176,7 +184,7 @@ export function TemplateEditor({
       clearTimeout(saveTimers.current[`item-${id}`]);
       setSaveStatus("saving");
       saveTimers.current[`item-${id}`] = setTimeout(async () => {
-        await updateItem(id, {
+        const result = await updateItem(id, {
           question: data.question,
           response_type: data.response_type,
           weight: data.weight,
@@ -189,10 +197,11 @@ export function TemplateEditor({
           max_value: data.max_value ?? null,
           options: data.options,
         });
-        markSaved();
+        if (result.error) markSaveError(result.error);
+        else markSaved();
       }, 1200);
     },
-    [markSaved]
+    [markSaved, markSaveError]
   );
 
   // ── Mutações estruturais ────────────────────────────────────
@@ -335,9 +344,11 @@ export function TemplateEditor({
   async function handlePublish() {
     if (!confirm("Publicar este template? Ele não poderá mais ser editado diretamente.")) return;
     const result = await publishTemplate(initial.id);
-    if (!result.error) {
-      window.location.reload();
+    if (result.error) {
+      toast.error(result.error);
+      return;
     }
+    window.location.reload();
   }
 
   // ── Save status label ───────────────────────────────────────

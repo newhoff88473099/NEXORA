@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { Sparkles, Save, ExternalLink, Plus } from "lucide-react";
 import {
   updateFindingDescription,
@@ -13,7 +14,7 @@ import {
 const SEV_COLOR: Record<string, string> = {
   critica:    "text-[var(--nc)] bg-[#B3261E]/10 border-[#B3261E]/30",
   maior:      "text-[var(--warn)] bg-[#B87700]/10 border-[#B87700]/30",
-  menor:      "text-blue-700 bg-blue-50 border-blue-200",
+  menor:      "text-[var(--info)] bg-[var(--info)]/10 border-[var(--info)]/20",
   observacao: "text-[var(--na)] bg-[#9AA09C]/10 border-[#9AA09C]/20",
 };
 const SEV_LABEL: Record<string, string> = {
@@ -108,15 +109,20 @@ export function NcDetail({ finding: initial, audit, actions: initialActions }: {
           payload: { description: initial.description, severity: initial.severity },
         }),
       });
-      const data = await res.json() as { text?: string };
+      const data = await res.json() as { text?: string; error?: string };
       if (data.text) {
         const parsed = JSON.parse(data.text) as SuggestedAnalysis;
         setPorques(parsed.porques ?? ["", "", "", "", ""]);
         setSuggested(parsed);
         setAiUsed(true);
+      } else {
+        toast.error(data.error || "Não foi possível gerar a análise. Tente novamente.");
       }
-    } catch { /* ignore parse errors */ }
-    finally { setAiLoading(false); }
+    } catch {
+      toast.error("Não foi possível contatar o assistente de IA. Tente novamente.");
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   async function handleSaveRootCause() {

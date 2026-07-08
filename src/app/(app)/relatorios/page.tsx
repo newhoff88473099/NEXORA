@@ -93,6 +93,7 @@ export default async function RelatoriosPage({
         <div className="space-y-2 print:hidden">
           <h2 className="text-sm font-medium text-foreground">Relatórios PDF gerados</h2>
           <div className="rounded border border-border overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
@@ -142,6 +143,7 @@ export default async function RelatoriosPage({
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}
@@ -217,6 +219,7 @@ export default async function RelatoriosPage({
       {/* Tabela */}
       {(audits ?? []).length > 0 ? (
         <div className="rounded border border-border overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
@@ -267,6 +270,7 @@ export default async function RelatoriosPage({
               })}
             </tbody>
           </table>
+          </div>
         </div>
       ) : (
         <div className="rounded border border-dashed border-border py-16 text-center">

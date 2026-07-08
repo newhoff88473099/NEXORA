@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PlusIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { cancelAudit } from "./actions";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 
 const STATUS_LABEL: Record<string, string> = {
   agendada: "Agendada",
@@ -13,7 +14,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 const STATUS_COLOR: Record<string, string> = {
   agendada: "text-[var(--warn)] bg-[#B87700]/10 border-[#B87700]/20",
-  em_andamento: "text-blue-700 bg-blue-50 border-blue-200",
+  em_andamento: "text-[var(--info)] bg-[var(--info)]/10 border-[var(--info)]/20",
   concluida: "text-[var(--ok)] bg-[#1E6B4F]/10 border-[#1E6B4F]/20",
   cancelada: "text-[var(--na)] bg-[#9AA09C]/10 border-[#9AA09C]/20",
 };
@@ -33,7 +34,7 @@ function scoreColor(score: number | null) {
 export default async function AuditoriasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; plant?: string }>;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -41,6 +42,7 @@ export default async function AuditoriasPage({
 
   const params = await searchParams;
   const statusFilter = params.status ?? "";
+  const plantFilter = params.plant ?? "";
 
   let query = supabase
     .from("audits")
@@ -52,8 +54,27 @@ export default async function AuditoriasPage({
     .order("started_at", { ascending: false });
 
   if (statusFilter) query = query.eq("status", statusFilter);
+  if (plantFilter) query = query.eq("plant_id", plantFilter);
 
   const { data: audits } = await query;
+
+  let plantName: string | null = null;
+  if (plantFilter) {
+    const { data: plant } = await supabase
+      .from("plants")
+      .select("name")
+      .eq("id", plantFilter)
+      .single();
+    plantName = plant?.name ?? null;
+  }
+
+  function buildHref(opts: { status?: string; plant?: string }) {
+    const p = new URLSearchParams();
+    if (opts.status) p.set("status", opts.status);
+    if (opts.plant) p.set("plant", opts.plant);
+    const qs = p.toString();
+    return qs ? `?${qs}` : "/auditorias";
+  }
 
   return (
     <div className="space-y-6">
@@ -65,6 +86,7 @@ export default async function AuditoriasPage({
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {(audits ?? []).length} auditoria{(audits ?? []).length !== 1 ? "s" : ""}
+            {plantName && ` · planta: ${plantName}`}
           </p>
         </div>
         <Link
@@ -76,12 +98,23 @@ export default async function AuditoriasPage({
         </Link>
       </div>
 
+      {plantFilter && (
+        <div className="flex items-center gap-2 text-xs">
+          <span className="px-2.5 py-1 rounded border border-primary/40 bg-primary/5 text-primary">
+            Planta: {plantName ?? plantFilter}
+          </span>
+          <Link href={buildHref({ status: statusFilter })} className="text-muted-foreground hover:text-foreground transition-colors">
+            Remover filtro de planta ×
+          </Link>
+        </div>
+      )}
+
       {/* Filtros de status */}
       <div className="flex gap-1.5 flex-wrap">
         {(["", "agendada", "em_andamento", "concluida", "cancelada"] as const).map((s) => (
           <Link
             key={s}
-            href={s ? `?status=${s}` : "/auditorias"}
+            href={buildHref({ status: s, plant: plantFilter })}
             className={`text-xs px-2.5 py-1 rounded border transition-colors ${
               statusFilter === s
                 ? "bg-primary text-primary-foreground border-primary"
@@ -96,6 +129,7 @@ export default async function AuditoriasPage({
       {/* Tabela */}
       {(audits ?? []).length > 0 ? (
         <div className="rounded border border-border overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
@@ -148,9 +182,12 @@ export default async function AuditoriasPage({
                         )}
                         {(a.status === "em_andamento" || a.status === "agendada") && (
                           <form action={cancelAudit.bind(null, a.id) as unknown as (fd: FormData) => void}>
-                            <button type="submit" className="text-xs text-muted-foreground hover:text-destructive transition-colors">
+                            <ConfirmSubmitButton
+                              confirmMessage="Cancelar esta auditoria? Essa ação não pode ser desfeita."
+                              className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                            >
                               Cancelar
-                            </button>
+                            </ConfirmSubmitButton>
                           </form>
                         )}
                       </div>
@@ -160,6 +197,7 @@ export default async function AuditoriasPage({
               })}
             </tbody>
           </table>
+          </div>
         </div>
       ) : (
         <div className="rounded border border-dashed border-border py-16 text-center">

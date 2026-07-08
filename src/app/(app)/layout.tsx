@@ -43,14 +43,14 @@ export default async function AppLayout({
   return (
     <div className="flex min-h-screen">
       <AppSidebar />
-      <div className="flex flex-1 flex-col pl-56">
+      <div className="flex flex-1 flex-col md:pl-56">
         <AppTopbar
           userEmail={user.email ?? ""}
           orgName={org.name}
           plants={plants ?? []}
         />
         <main className="flex-1 pt-14">
-          <div className="p-6">{children}</div>
+          <div className="p-4 sm:p-6">{children}</div>
         </main>
       </div>
     </div>

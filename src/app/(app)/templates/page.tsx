@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createTemplate, archiveTemplate, deleteTemplate, duplicateTemplate } from "./actions";
 import { PlusIcon } from "lucide-react";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 
 const CATEGORY_LABELS: Record<string, string> = {
   seguranca: "Segurança",
@@ -163,6 +164,7 @@ type TemplateRow = {
 function TemplateTable({ templates, isOwn }: { templates: TemplateRow[]; isOwn: boolean }) {
   return (
     <div className="rounded border border-border overflow-hidden">
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-muted/50 border-b border-border">
           <tr>
@@ -209,6 +211,7 @@ function TemplateTable({ templates, isOwn }: { templates: TemplateRow[]; isOwn: 
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -237,9 +240,12 @@ function RowActions({ template: t, isOwn }: { template: TemplateRow; isOwn: bool
             </button>
           </form>
           <form action={deleteTemplate.bind(null, t.id) as unknown as (fd: FormData) => void}>
-            <button type="submit" className="text-xs text-destructive hover:text-destructive/80 transition-colors">
+            <ConfirmSubmitButton
+              confirmMessage="Excluir este checklist? Essa ação não pode ser desfeita."
+              className="text-xs text-destructive hover:text-destructive/80 transition-colors"
+            >
               Excluir
-            </button>
+            </ConfirmSubmitButton>
           </form>
         </>
       )}

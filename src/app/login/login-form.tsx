@@ -78,7 +78,7 @@ export function LoginForm() {
               autoComplete="current-password" required />
           </div>
           {loginState.error && (
-            <p className="text-sm text-destructive">{loginState.error}</p>
+            <p role="alert" className="text-sm text-destructive">{loginState.error}</p>
           )}
           <Button type="submit" className="w-full" disabled={loginPending}>
             {loginPending ? "Entrando..." : "Entrar"}
@@ -106,7 +106,7 @@ export function LoginForm() {
                   autoComplete="new-password" placeholder="Mínimo 8 caracteres" required />
               </div>
               {signUpState.error && (
-                <p className="text-sm text-destructive">{signUpState.error}</p>
+                <p role="alert" className="text-sm text-destructive">{signUpState.error}</p>
               )}
               <Button type="submit" className="w-full" disabled={signUpPending}>
                 {signUpPending ? "Criando conta..." : "Criar conta"}
@@ -143,7 +143,7 @@ export function LoginForm() {
                   placeholder="voce@empresa.com.br" autoComplete="email" required />
               </div>
               {resetState.error && (
-                <p className="text-sm text-destructive">{resetState.error}</p>
+                <p role="alert" className="text-sm text-destructive">{resetState.error}</p>
               )}
               <Button type="submit" className="w-full" disabled={resetPending}>
                 {resetPending ? "Enviando..." : "Enviar link de redefinição"}
@@ -181,7 +181,7 @@ export function LoginForm() {
                   placeholder="voce@empresa.com.br" autoComplete="email" required />
               </div>
               {magicState.error && (
-                <p className="text-sm text-destructive">{magicState.error}</p>
+                <p role="alert" className="text-sm text-destructive">{magicState.error}</p>
               )}
               <Button type="submit" className="w-full" disabled={magicPending}>
                 {magicPending ? "Enviando..." : "Enviar link de acesso"}

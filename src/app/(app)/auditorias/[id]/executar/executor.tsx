@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useTransition, useRef } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, MessageSquare, CheckCircle } from "lucide-react";
+import { ArrowLeft, ChevronRight, MessageSquare, CheckCircle, Camera, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { AnswerButtons } from "@/components/audit/answer-buttons";
 import { NcModal } from "@/components/audit/nc-modal";
 import { PhotoUploader } from "@/components/audit/photo-uploader";
@@ -100,7 +101,13 @@ function ItemWidget({ item, auditId, answer: ans, finding, onAnswer, onNote, onP
       {item.response_type === "escala" && (
         <div className="flex gap-1.5">
           {[1, 2, 3, 4, 5].map((n) => {
-            const colors = ["bg-[var(--nc)]", "bg-orange-500", "bg-[var(--warn)]", "bg-lime-600", "bg-[var(--ok)]"];
+            const colors = [
+              "bg-[var(--nc)]",
+              "bg-[color-mix(in_oklch,var(--nc),var(--warn)_50%)]",
+              "bg-[var(--warn)]",
+              "bg-[color-mix(in_oklch,var(--warn),var(--ok)_50%)]",
+              "bg-[var(--ok)]",
+            ];
             const isActive = ans?.response === String(n);
             return (
               <button
@@ -196,7 +203,7 @@ function ItemWidget({ item, auditId, answer: ans, finding, onAnswer, onNote, onP
           onClick={() => setShowPhotos(!showPhotos)}
           className={`flex items-center gap-1 text-xs transition-colors ${showPhotos ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
         >
-          <span className="text-xs">📷</span>
+          <Camera className="h-3.5 w-3.5" />
           Foto {(ans?.photos?.length ?? 0) > 0 && `(${ans!.photos.length})`}
         </button>
       </div>
@@ -333,6 +340,8 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
         const result = await saveAnswer(audit.id, item.id, { response });
         if (result.id) {
           setAnswers((prev) => ({ ...prev, [item.id]: { ...prev[item.id], id: result.id } }));
+        } else if (result.error) {
+          toast.error(`Falha ao salvar resposta: ${result.error}`);
         }
       })();
     });
@@ -349,7 +358,12 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
     setAnswers((prev) => ({ ...prev, [itemId]: { ...prev[itemId], note } }));
     clearTimeout(noteTimers.current[itemId]);
     noteTimers.current[itemId] = setTimeout(() => {
-      startTransition(() => { void saveAnswer(audit.id, itemId, { note }); });
+      startTransition(() => {
+        void (async () => {
+          const result = await saveAnswer(audit.id, itemId, { note });
+          if (result.error) toast.error(`Falha ao salvar nota: ${result.error}`);
+        })();
+      });
     }, 1000);
   }
 
@@ -357,7 +371,12 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
 
   function handlePhotos(itemId: string, photos: string[]) {
     setAnswers((prev) => ({ ...prev, [itemId]: { ...prev[itemId], photos } }));
-    startTransition(() => { void saveAnswer(audit.id, itemId, { photos }); });
+    startTransition(() => {
+      void (async () => {
+        const result = await saveAnswer(audit.id, itemId, { photos });
+        if (result.error) toast.error(`Falha ao salvar foto: ${result.error}`);
+      })();
+    });
   }
 
   // ── Confirmar NC ──────────────────────────────────────────
@@ -375,6 +394,8 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
           if (answerId) {
             setFindings((prev) => ({ ...prev, [answerId]: { id: result.id!, code: result.code!, severity: data.severity } }));
           }
+        } else if (result.error) {
+          toast.error(`Falha ao registrar NC: ${result.error}`);
         }
       })();
     });
@@ -385,29 +406,45 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
   const [observations, setObservations] = useState("");
   const [signature, setSignature] = useState<string | null>(null);
   const [finishing, setFinishing] = useState(false);
+  const [finishError, setFinishError] = useState<string | null>(null);
 
   async function handleFinish() {
     setFinishing(true);
-    let sigUrl: string | undefined;
+    setFinishError(null);
+    try {
+      let sigUrl: string | undefined;
 
-    if (signature) {
-      // Upload da assinatura para o Storage
-      const supabase = createClient();
-      const blob = await fetch(signature).then((r) => r.blob());
-      const path = `${audit.id}/signature.png`;
-      await supabase.storage.from("audit-signatures").upload(path, blob, {
-        contentType: "image/png",
-        upsert: true,
+      if (signature) {
+        // Upload da assinatura para o Storage
+        const supabase = createClient();
+        const blob = await fetch(signature).then((r) => r.blob());
+        const path = `${audit.id}/signature.png`;
+        const { error: uploadError } = await supabase.storage
+          .from("audit-signatures")
+          .upload(path, blob, { contentType: "image/png", upsert: true });
+        if (uploadError) throw new Error(uploadError.message);
+        const { data } = supabase.storage.from("audit-signatures").getPublicUrl(path);
+        sigUrl = data.publicUrl;
+      }
+
+      const result = await finishAudit(audit.id, {
+        observations,
+        score: score ?? undefined,
+        auditee_signature_url: sigUrl,
       });
-      const { data } = supabase.storage.from("audit-signatures").getPublicUrl(path);
-      sigUrl = data.publicUrl;
+      // Em caso de sucesso, finishAudit redireciona e este componente é desmontado.
+      if (result?.error) {
+        setFinishError(result.error);
+        toast.error(result.error);
+        setFinishing(false);
+      }
+    } catch (e) {
+      const message =
+        e instanceof Error ? e.message : "Erro ao concluir a auditoria. Tente novamente.";
+      setFinishError(message);
+      toast.error(message);
+      setFinishing(false);
     }
-
-    await finishAudit(audit.id, {
-      observations,
-      score: score ?? undefined,
-      auditee_signature_url: sigUrl,
-    });
   }
 
   // ── Layout ────────────────────────────────────────────────
@@ -435,6 +472,16 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
             Finalizar auditoria
           </h1>
         </div>
+
+        {answered < allItems.length && (
+          <div role="alert" className="flex items-start gap-2 rounded border border-[var(--warn)]/30 bg-[var(--warn)]/10 px-4 py-3 text-sm text-[var(--warn)]">
+            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <span>
+              {allItems.length - answered} {allItems.length - answered === 1 ? "item ainda não foi respondido" : "itens ainda não foram respondidos"}.
+              Você pode concluir mesmo assim, mas revise antes de finalizar.
+            </span>
+          </div>
+        )}
 
         {/* Resumo */}
         <div className="rounded border border-border bg-card p-5 space-y-3">
@@ -494,6 +541,11 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
         </div>
 
         {/* Concluir */}
+        {finishError && (
+          <p role="alert" className="text-sm text-destructive text-center">
+            {finishError}
+          </p>
+        )}
         <button
           onClick={handleFinish}
           disabled={finishing}
@@ -507,7 +559,7 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
   }
 
   return (
-    <div className="flex flex-col min-h-screen -mt-6 -mx-6">
+    <div className="flex flex-col min-h-screen -mt-4 -mx-4 sm:-mt-6 sm:-mx-6">
       {/* Header da execução */}
       <div className="sticky top-0 z-30 bg-background border-b border-border">
         <div className="flex items-center gap-3 px-4 py-2">
@@ -587,7 +639,7 @@ export function AuditExecutor({ audit, sections, initialAnswers, initialFindings
       </div>
 
       {/* Navegação entre seções */}
-      <div className="fixed bottom-0 left-56 right-0 bg-background border-t border-border px-4 py-3 flex justify-between">
+      <div className="fixed bottom-0 inset-x-0 md:left-56 bg-background border-t border-border px-4 py-3 flex justify-between">
         <button
           onClick={() => setCurrentSection((s) => Math.max(0, s - 1))}
           disabled={currentSection === 0}

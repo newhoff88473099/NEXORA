@@ -24,11 +24,39 @@ const navItems = [
   { href: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
-export function AppSidebar() {
+export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 flex w-56 flex-col border-r border-border bg-sidebar">
+    <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-2">
+      {navItems.map(({ href, label, icon: Icon }) => {
+        const active =
+          pathname === href || pathname.startsWith(href + "/");
+        return (
+          <Link
+            key={href}
+            href={href}
+            onClick={onNavigate}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+              active
+                ? "bg-primary text-primary-foreground"
+                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            )}
+          >
+            <Icon size={16} strokeWidth={1.75} />
+            <span>{label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export function AppSidebar() {
+  return (
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-border bg-sidebar md:flex">
       {/* Logo */}
       <div className="flex h-14 items-center justify-center border-b border-border bg-[#1A1D1B] px-3">
         <Image
@@ -41,27 +69,7 @@ export function AppSidebar() {
         />
       </div>
 
-      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-2">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const active =
-            pathname === href || pathname.startsWith(href + "/");
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              )}
-            >
-              <Icon size={16} strokeWidth={1.75} />
-              <span>{label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <SidebarNav />
 
       {/* Faixa hazard no rodapé */}
       <div

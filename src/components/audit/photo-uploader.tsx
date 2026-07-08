@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Camera, X, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -171,7 +172,7 @@ function PhotoAnnotator({ url, auditId, itemId, onSave, onClose }: AnnotatorProp
     startPoint.current = pos;
     snapshotRef.current = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-    ctx.strokeStyle = "#E53E3E";
+    ctx.strokeStyle = "#B3261E"; // --nc
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
 
@@ -192,7 +193,7 @@ function PhotoAnnotator({ url, auditId, itemId, onSave, onClose }: AnnotatorProp
       ctx.stroke();
     } else if (snapshotRef.current) {
       ctx.putImageData(snapshotRef.current, 0, 0);
-      ctx.strokeStyle = "#E53E3E";
+      ctx.strokeStyle = "#B3261E"; // --nc
       ctx.lineWidth = 3;
       const { x: sx, y: sy } = startPoint.current;
 
@@ -242,54 +243,63 @@ function PhotoAnnotator({ url, auditId, itemId, onSave, onClose }: AnnotatorProp
   }
 
   return (
-    <div className="fixed inset-0 z-60 flex flex-col bg-black/90">
-      {/* Toolbar */}
-      <div className="flex items-center gap-2 p-3 bg-black/60">
-        {(["freehand", "circle", "arrow"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTool(t)}
-            className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-              tool === t ? "bg-red-600 text-white" : "bg-white/10 text-white hover:bg-white/20"
-            }`}
-          >
-            {t === "freehand" ? "Traço livre" : t === "circle" ? "Círculo" : "Seta"}
-          </button>
-        ))}
-        <div className="flex-1" />
-        <button onClick={onClose} className="text-white/70 hover:text-white text-xs px-3 py-1.5">
-          Cancelar
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-primary text-white text-xs px-3 py-1.5 rounded font-medium hover:bg-primary/90 disabled:opacity-50"
+    <DialogPrimitive.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Popup
+          className="fixed inset-0 z-60 flex flex-col bg-black/90 outline-none"
+          data-slot="photo-annotator"
         >
-          {saving ? "Salvando…" : "Salvar"}
-        </button>
-      </div>
+          <DialogPrimitive.Title className="sr-only">Anotar foto</DialogPrimitive.Title>
 
-      {/* Canvas */}
-      <div className="flex-1 flex items-center justify-center overflow-auto p-4">
-        <canvas
-          ref={canvasRef}
-          className="max-w-full touch-none cursor-crosshair"
-          style={{ touchAction: "none" }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-        />
-        {/* Carrega a imagem no canvas */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={url}
-          alt=""
-          className="hidden"
-          onLoad={(e) => initCanvas(e.currentTarget)}
-          crossOrigin="anonymous"
-        />
-      </div>
-    </div>
+          {/* Toolbar */}
+          <div className="flex items-center gap-2 p-3 bg-black/60">
+            {(["freehand", "circle", "arrow"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTool(t)}
+                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                  tool === t ? "bg-[var(--nc)] text-white" : "bg-white/10 text-white hover:bg-white/20"
+                }`}
+              >
+                {t === "freehand" ? "Traço livre" : t === "circle" ? "Círculo" : "Seta"}
+              </button>
+            ))}
+            <div className="flex-1" />
+            <button onClick={onClose} className="text-white/70 hover:text-white text-xs px-3 py-1.5">
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-primary text-white text-xs px-3 py-1.5 rounded font-medium hover:bg-primary/90 disabled:opacity-50"
+            >
+              {saving ? "Salvando…" : "Salvar"}
+            </button>
+          </div>
+
+          {/* Canvas */}
+          <div className="flex-1 flex items-center justify-center overflow-auto p-4">
+            <canvas
+              ref={canvasRef}
+              className="max-w-full touch-none cursor-crosshair"
+              style={{ touchAction: "none" }}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+            />
+            {/* Carrega a imagem no canvas */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={url}
+              alt=""
+              className="hidden"
+              onLoad={(e) => initCanvas(e.currentTarget)}
+              crossOrigin="anonymous"
+            />
+          </div>
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }

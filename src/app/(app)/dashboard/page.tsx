@@ -12,7 +12,7 @@ function scoreColor(s: number) {
 
 const STATUS_COLOR: Record<string, string> = {
   agendada:     "text-[var(--warn)] bg-[#B87700]/10 border-[#B87700]/20",
-  em_andamento: "text-blue-700 bg-blue-50 border-blue-200",
+  em_andamento: "text-[var(--info)] bg-[var(--info)]/10 border-[var(--info)]/20",
   concluida:    "text-[var(--ok)] bg-[#1E6B4F]/10 border-[#1E6B4F]/20",
   cancelada:    "text-[var(--na)] bg-[#9AA09C]/10 border-[#9AA09C]/20",
 };
@@ -180,6 +180,7 @@ export default async function DashboardPage() {
           <Link href="/auditorias" className="text-xs text-primary hover:underline">Ver todas →</Link>
         </div>
         {recent.length > 0 ? (
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/30 border-b border-border">
               <tr>
@@ -218,6 +219,7 @@ export default async function DashboardPage() {
               })}
             </tbody>
           </table>
+          </div>
         ) : (
           <div className="py-10 text-center text-sm text-muted-foreground">
             Nenhuma auditoria ainda.{" "}

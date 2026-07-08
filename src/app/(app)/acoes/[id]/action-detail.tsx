@@ -12,15 +12,15 @@ const STATUS_STEPS = ["a_fazer", "em_andamento", "concluida", "verificada"] as c
 
 const STATUS: Record<string, { label: string; color: string; bg: string }> = {
   a_fazer:      { label: "A fazer",       color: "text-muted-foreground", bg: "bg-muted border-border" },
-  em_andamento: { label: "Em andamento",  color: "text-blue-700", bg: "bg-blue-50 border-blue-200" },
+  em_andamento: { label: "Em andamento",  color: "text-[var(--info)]", bg: "bg-[var(--info)]/10 border-[var(--info)]/20" },
   concluida:    { label: "Concluída",     color: "text-[var(--ok)]", bg: "bg-[#1E6B4F]/10 border-[#1E6B4F]/20" },
-  verificada:   { label: "Verificada",    color: "text-purple-700", bg: "bg-purple-50 border-purple-200" },
+  verificada:   { label: "Verificada",    color: "text-[var(--verified)]", bg: "bg-[var(--verified)]/10 border-[var(--verified)]/20" },
 };
 
 const SEV_COLOR: Record<string, string> = {
   critica:    "text-[var(--nc)] bg-[#B3261E]/10 border-[#B3261E]/30",
   maior:      "text-[var(--warn)] bg-[#B87700]/10 border-[#B87700]/30",
-  menor:      "text-blue-700 bg-blue-50 border-blue-200",
+  menor:      "text-[var(--info)] bg-[var(--info)]/10 border-[var(--info)]/20",
   observacao: "text-[var(--na)] bg-[#9AA09C]/10 border-[#9AA09C]/20",
 };
 
@@ -266,7 +266,7 @@ export function ActionDetail({ action: initial, finding, audit, members, current
             </button>
           )}
           {status === "verificada" && (
-            <div className="flex items-center gap-2 text-sm text-purple-700">
+            <div className="flex items-center gap-2 text-sm text-[var(--verified)]">
               <CheckCircle className="h-4 w-4" />
               Ação verificada e encerrada
             </div>

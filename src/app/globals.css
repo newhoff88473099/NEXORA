@@ -48,6 +48,8 @@
   --color-warn: var(--warn);
   --color-nc: var(--nc);
   --color-na: var(--na);
+  --color-info: var(--info);
+  --color-verified: var(--verified);
 }
 
 :root {
@@ -66,6 +68,8 @@
   --warn:          #B87700;
   --nc:            #B3261E;
   --na:            #9AA09C;
+  --info:          #2563A8;
+  --verified:      #6D4E9C;
 
   /* Faixa zebrada — apenas em topo de NC crítica e cabeçalho de PDF */
   --hazard-stripe: repeating-linear-gradient(45deg, #1A1D1B 0 8px, #E8B00F 8px 16px);

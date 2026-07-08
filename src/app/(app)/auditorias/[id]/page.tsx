@@ -19,7 +19,7 @@ const SEVERITY_LABEL: Record<string, string> = {
 const SEVERITY_COLOR: Record<string, string> = {
   critica: "text-[var(--nc)] bg-[#B3261E]/10 border-[#B3261E]/30",
   maior: "text-[var(--warn)] bg-[#B87700]/10 border-[#B87700]/30",
-  menor: "text-blue-700 bg-blue-50 border-blue-200",
+  menor: "text-[var(--info)] bg-[var(--info)]/10 border-[var(--info)]/20",
   observacao: "text-[var(--na)] bg-[#9AA09C]/10 border-[#9AA09C]/20",
 };
 
@@ -141,6 +141,7 @@ export default async function AuditoriaDetailPage({
 
           {/* Lista */}
           <div className="rounded border border-border overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b border-border">
                 <tr>
@@ -180,6 +181,7 @@ export default async function AuditoriaDetailPage({
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         </section>
       )}

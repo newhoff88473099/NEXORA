@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { X, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type ItemData = {
   id: string;
@@ -32,7 +40,7 @@ type Props = {
 const SEVERITY = [
   { value: "critica", label: "Crítica", color: "border-[var(--nc)] text-[var(--nc)] bg-[#B3261E]/5" },
   { value: "maior", label: "Maior", color: "border-[var(--warn)] text-[var(--warn)] bg-[#B87700]/5" },
-  { value: "menor", label: "Menor", color: "border-blue-400 text-blue-700 bg-blue-50" },
+  { value: "menor", label: "Menor", color: "border-[var(--info)] text-[var(--info)] bg-[var(--info)]/5" },
   { value: "observacao", label: "Observação", color: "border-[var(--na)] text-[var(--na)] bg-[#9AA09C]/5" },
 ];
 
@@ -67,10 +75,10 @@ export function NcModal({ item, onConfirm, onCancel }: Props) {
         setDescription(data.text);
         setAiUsed(true);
       } else {
-        setAiError(data.detail || data.error || "Erro desconhecido");
+        setAiError(data.detail || data.error || "Não foi possível gerar a descrição. Tente novamente.");
       }
-    } catch (e) {
-      setAiError(String(e));
+    } catch {
+      setAiError("Não foi possível contatar o assistente de IA. Tente novamente.");
     } finally {
       setAiLoading(false);
     }
@@ -90,18 +98,12 @@ export function NcModal({ item, onConfirm, onCancel }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-lg border border-border bg-card shadow-xl">
-        {/* Cabeçalho */}
-        <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
-          <div>
-            <h2 className="text-base font-semibold text-foreground">Registrar Não Conformidade</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{item.question}</p>
-          </div>
-          <button onClick={onCancel} className="text-muted-foreground hover:text-foreground shrink-0">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Registrar Não Conformidade</DialogTitle>
+          <DialogDescription className="line-clamp-2">{item.question}</DialogDescription>
+        </DialogHeader>
 
         <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* Severidade */}
@@ -155,7 +157,7 @@ export function NcModal({ item, onConfirm, onCancel }: Props) {
               </p>
             )}
             {aiError && (
-              <p className="text-[10px] text-[var(--nc)] break-all">{aiError}</p>
+              <p role="alert" className="text-[10px] text-[var(--nc)]">{aiError}</p>
             )}
           </div>
 
@@ -222,8 +224,7 @@ export function NcModal({ item, onConfirm, onCancel }: Props) {
           </div>
         </div>
 
-        {/* Rodapé */}
-        <div className="flex gap-3 border-t border-border px-5 py-4">
+        <DialogFooter>
           <button
             onClick={onCancel}
             className="flex-1 h-9 rounded border border-border text-sm hover:bg-muted transition-colors"
@@ -237,8 +238,8 @@ export function NcModal({ item, onConfirm, onCancel }: Props) {
           >
             Registrar NC
           </button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

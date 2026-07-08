@@ -32,7 +32,7 @@ export function OrgForm() {
           required
         />
         {state.errors?.name && (
-          <p className="text-xs text-destructive">{state.errors.name[0]}</p>
+          <p role="alert" className="text-xs text-destructive">{state.errors.name[0]}</p>
         )}
       </div>
 
@@ -49,12 +49,12 @@ export function OrgForm() {
           required
         />
         {state.errors?.cnpj && (
-          <p className="text-xs text-destructive">{state.errors.cnpj[0]}</p>
+          <p role="alert" className="text-xs text-destructive">{state.errors.cnpj[0]}</p>
         )}
       </div>
 
       {state.errors?._form && (
-        <p className="text-sm text-destructive">{state.errors._form[0]}</p>
+        <p role="alert" className="text-sm text-destructive">{state.errors._form[0]}</p>
       )}
 
       <Button type="submit" className="w-full" disabled={pending}>
